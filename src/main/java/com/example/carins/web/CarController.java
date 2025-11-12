@@ -78,7 +78,11 @@ public class CarController {
                                            @Valid @RequestBody TransferOwnerBody body) {
         try {
             var transferId = service.transferOwner(carId, body.ownerId);
-            return ResponseEntity.ok(transferId);
+            var uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                    .replacePath("/api/car-owner-history/" + transferId)
+                    .build()
+                    .toUri();
+            return ResponseEntity.created(uri).build();
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         }
