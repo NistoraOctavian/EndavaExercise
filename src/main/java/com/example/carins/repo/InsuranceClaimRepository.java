@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface InsuranceClaimRepository extends JpaRepository<InsuranceClaim, Long>
 {
-    @Query("select c " +
+    @Query( "select c " +
             "from InsuranceClaim c " +
             "where c.car.id = :carId " +
             "and c.claimDate < current_date " +

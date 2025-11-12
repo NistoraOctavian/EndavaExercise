@@ -14,20 +14,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class CarService {
+public class CarService
+{
 
     private final CarRepository carRepository;
     private final InsurancePolicyRepository policyRepository;
     private final InsuranceClaimRepository claimRepository;
 
     public CarService(CarRepository carRepository, InsurancePolicyRepository policyRepository,
-                      InsuranceClaimRepository claimRepository) {
+                      InsuranceClaimRepository claimRepository)
+    {
         this.carRepository = carRepository;
         this.policyRepository = policyRepository;
         this.claimRepository = claimRepository;
     }
 
-    public List<Car> listCars() {
+    public List<Car> listCars()
+    {
         return carRepository.findAll();
     }
 
@@ -52,14 +55,16 @@ public class CarService {
         return insuranceClaim.getId();
     }
 
-    public List<String> carHistory(Long carId) {
+    public List<String> carHistory(Long carId)
+    {
         carRepository.findById(carId).orElseThrow();
         List<InsurancePolicy> policyList = policyRepository.carPolicyHistory(carId);
         List<InsuranceClaim> claimList = claimRepository.carClaimHistory(carId);
         var result = new ArrayList<String>();
         int claimIndex = 0;
 
-        for (int i = 0; i < policyList.size() - 1; i++) {
+        for (int i = 0; i < policyList.size() - 1; i++)
+        {
             InsurancePolicy policy = policyList.get(i);
 
             claimIndex = addClaimsToHistory(result, claimList, claimIndex, policy.getStartDate());
@@ -83,7 +88,8 @@ public class CarService {
             result.add("Policy " + policy.getId() + " for car " + policy.getCar().getId() + " expired on "
                     + policy.getEndDate());
 
-            while (claimIndex < claimList.size()) {
+            while (claimIndex < claimList.size())
+            {
                 InsuranceClaim claim = claimList.get(claimIndex++);
                 result.add("Claim " + claim.getId() + " for car " + claim.getCar().getId() + " on "
                         + claim.getClaimDate() + " with amount " + claim.getAmount() + " and description: "
@@ -94,10 +100,12 @@ public class CarService {
         return result;
     }
 
-    private int addClaimsToHistory(List<String> result, List<InsuranceClaim> claimList, int claimIndex, LocalDate beforeDate)
+    private int addClaimsToHistory(List<String> result, List<InsuranceClaim> claimList, int claimIndex,
+                                   LocalDate beforeDate)
     {
         while (claimIndex < claimList.size() &&
-                claimList.get(claimIndex).getClaimDate().isBefore(beforeDate)) {
+                claimList.get(claimIndex).getClaimDate().isBefore(beforeDate))
+        {
             InsuranceClaim claim = claimList.get(claimIndex++);
             result.add("Claim " + claim.getId() + " for car " + claim.getCar().getId() + " on "
                     + claim.getClaimDate() + " with amount " + claim.getAmount() + " and description: "

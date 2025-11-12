@@ -40,8 +40,7 @@ public class CarController
         try
         {
             LocalDate.parse(date);
-        }
-        catch (DateTimeParseException e)
+        } catch (DateTimeParseException e)
         {
             return ResponseEntity.badRequest().body("Date must be in a valid YYYY-MM-DD format");
         }
@@ -51,8 +50,7 @@ public class CarController
         {
             boolean valid = service.isInsuranceValid(carId, d);
             return ResponseEntity.ok(new InsuranceValidityResponse(carId, d.toString(), valid));
-        }
-        catch (ChangeSetPersister.NotFoundException e)
+        } catch (ChangeSetPersister.NotFoundException e)
         {
             return ResponseEntity.notFound().build();
         }
@@ -69,8 +67,7 @@ public class CarController
                     .build()
                     .toUri();
             return ResponseEntity.created(uri).build();
-        }
-        catch (NoSuchElementException e)
+        } catch (NoSuchElementException e)
         {
             return ResponseEntity.notFound().build();
         }
@@ -83,8 +80,7 @@ public class CarController
         {
             var history = service.carHistory(carId);
             return ResponseEntity.ok(history);
-        }
-        catch (NoSuchElementException e)
+        } catch (NoSuchElementException e)
         {
             return ResponseEntity.notFound().build();
         }
