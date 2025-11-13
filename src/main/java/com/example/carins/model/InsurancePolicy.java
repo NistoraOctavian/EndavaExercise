@@ -15,6 +15,7 @@ public class InsurancePolicy {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Car car;
     private String provider;
+    @NotNull
     private LocalDate startDate;
     @NotNull
     private LocalDate endDate;
