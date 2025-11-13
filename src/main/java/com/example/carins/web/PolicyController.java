@@ -1,6 +1,7 @@
 package com.example.carins.web;
 
 import com.example.carins.service.PolicyService;
+import com.example.carins.shared.exceptions.OverlapException;
 import com.example.carins.web.dto.PolicyDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,8 @@ class PolicyController {
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
+        } catch (OverlapException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
