@@ -11,22 +11,24 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class CarService {
 
     private final CarRepository carRepository;
-    private final InsurancePolicyRepository policyRepository;
-    private final InsuranceClaimRepository claimRepository;
+    private final InsurancePolicyRepository insurancePolicyRepository;
+    private final InsuranceClaimRepository insuranceClaimRepository;
     private final CarOwnerHistoryRepository carOwnerHistoryRepository;
     private final OwnerRepository ownerRepository;
 
-    public CarService(CarRepository carRepository, InsurancePolicyRepository policyRepository,
-                      InsuranceClaimRepository claimRepository, CarOwnerHistoryRepository carOwnerHistoryRepository,
+    public CarService(CarRepository carRepository, InsurancePolicyRepository insurancePolicyRepository,
+                      InsuranceClaimRepository insuranceClaimRepository,
+                      CarOwnerHistoryRepository carOwnerHistoryRepository,
                       OwnerRepository ownerRepository) {
         this.carRepository = carRepository;
-        this.policyRepository = policyRepository;
-        this.claimRepository = claimRepository;
+        this.insurancePolicyRepository = insurancePolicyRepository;
+        this.insuranceClaimRepository = insuranceClaimRepository;
         this.carOwnerHistoryRepository = carOwnerHistoryRepository;
         this.ownerRepository = ownerRepository;
     }
@@ -38,10 +40,10 @@ public class CarService {
     public boolean isInsuranceValid(Long carId, LocalDate date) throws ChangeSetPersister.NotFoundException {
         if (carId == null || date == null) return false;
         carRepository.findById(carId).orElseThrow(ChangeSetPersister.NotFoundException::new);
-        return policyRepository.existsActiveOnDate(carId, date);
+        return insurancePolicyRepository.existsActiveOnDate(carId, date);
     }
 
-    public long registerClaim(Long carId, LocalDate claimDate, String description, int amount) {
+    public long registerClaim(Long carId, LocalDate claimDate, String description, int amount) throws NoSuchElementException {
         var car = carRepository.findById(carId).orElseThrow();
         var insuranceClaim = new InsuranceClaim();
         insuranceClaim.setCar(car);
@@ -49,15 +51,15 @@ public class CarService {
         insuranceClaim.setDescription(description);
         insuranceClaim.setAmount(amount);
 
-        claimRepository.save(insuranceClaim);
+        insuranceClaimRepository.save(insuranceClaim);
 
         return insuranceClaim.getId();
     }
 
-    public List<String> carHistory(Long carId) {
+    public List<String> carHistory(Long carId) throws NoSuchElementException {
         carRepository.findById(carId).orElseThrow();
-        List<InsurancePolicy> policyList = policyRepository.carPolicyHistory(carId);
-        List<InsuranceClaim> claimList = claimRepository.carClaimHistory(carId);
+        List<InsurancePolicy> policyList = insurancePolicyRepository.carPolicyHistory(carId);
+        List<InsuranceClaim> claimList = insuranceClaimRepository.carClaimHistory(carId);
         var result = new ArrayList<String>();
         int claimIndex = 0;
 
@@ -95,7 +97,7 @@ public class CarService {
         return result;
     }
 
-    public long transferOwner(long carId, long ownerId) {
+    public long transferOwner(long carId, long ownerId) throws NoSuchElementException {
         var car = carRepository.findById(carId).orElseThrow();
         var newOwner = ownerRepository.findById(ownerId).orElseThrow();
 

@@ -1,12 +1,13 @@
 package com.example.carins.web;
 
-import com.example.carins.model.Car;
 import com.example.carins.service.CarService;
-import com.example.carins.web.dto.CarDto;
+import com.example.carins.service.PolicyService;
+import com.example.carins.web.dto.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -17,21 +18,23 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/cars")
 public class CarController {
 
-    private final CarService service;
+    private final CarService carService;
+    private final PolicyService policyService;
 
-    public CarController(CarService service) {
-        this.service = service;
+    public CarController(CarService carService, PolicyService policyService) {
+        this.carService = carService;
+        this.policyService = policyService;
     }
 
-    @GetMapping("/cars")
+    @GetMapping("")
     public List<CarDto> getCars() {
-        return service.listCars().stream().map(this::toDto).toList();
+        return carService.listCars().stream().map(CarDto::new).toList();
     }
 
-    @GetMapping("/cars/{carId}/insurance-valid")
+    @GetMapping("/{carId}/insurance-valid")
     public ResponseEntity<?> isInsuranceValid(@NotNull @PathVariable Long carId, @NotEmpty @RequestParam String date) {
         try {
             LocalDate.parse(date);
@@ -41,18 +44,18 @@ public class CarController {
 
         LocalDate d = LocalDate.parse(date);
         try {
-            boolean valid = service.isInsuranceValid(carId, d);
-            return ResponseEntity.ok(new InsuranceValidityResponse(carId, d.toString(), valid));
+            boolean valid = carService.isInsuranceValid(carId, d);
+            return ResponseEntity.ok(new InsuranceValidityResponseDTO(carId, d.toString(), valid));
         } catch (ChangeSetPersister.NotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @PostMapping("/cars/{carId}/claims")
+    @PostMapping("/{carId}/claims")
     public ResponseEntity<?> registerClaim(@NotNull @PathVariable Long carId,
-                                           @Valid @RequestBody RegisterClaimBody body) {
+                                           @Valid @RequestBody RegisterClaimRequestDTO body) {
         try {
-            var claimId = service.registerClaim(carId, body.claimDate, body.description, body.amount);
+            var claimId = carService.registerClaim(carId, body.claimDate(), body.description(), body.amount());
             var uri = ServletUriComponentsBuilder.fromCurrentRequest()
                     .replacePath("/api/claims/" + claimId)
                     .build()
@@ -63,21 +66,21 @@ public class CarController {
         }
     }
 
-    @GetMapping("/cars/{carId}/history")
+    @GetMapping("/{carId}/history")
     public ResponseEntity<?> getCarHistory(@NotNull @PathVariable Long carId) {
         try {
-            var history = service.carHistory(carId);
+            var history = carService.carHistory(carId);
             return ResponseEntity.ok(history);
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @PostMapping("/cars/{carId}/transfer-owner")
+    @PostMapping("/{carId}/transfer-owner")
     public ResponseEntity<?> transferOwner(@NotNull @PathVariable Long carId,
-                                           @Valid @RequestBody TransferOwnerBody body) {
+                                           @Valid @RequestBody TransferOwnerRequestDTO body) {
         try {
-            var transferId = service.transferOwner(carId, body.ownerId);
+            var transferId = carService.transferOwner(carId, body.ownerId());
             var uri = ServletUriComponentsBuilder.fromCurrentRequest()
                     .replacePath("/api/car-owner-history/" + transferId)
                     .build()
@@ -88,20 +91,20 @@ public class CarController {
         }
     }
 
-    private CarDto toDto(Car c) {
-        var o = c.getOwner();
-        return new CarDto(c.getId(), c.getVin(), c.getMake(), c.getModel(), c.getYearOfManufacture(),
-                o != null ? o.getId() : null,
-                o != null ? o.getName() : null,
-                o != null ? o.getEmail() : null);
-    }
-
-    public record InsuranceValidityResponse(Long carId, String date, boolean valid) {
-    }
-
-    public record RegisterClaimBody(LocalDate claimDate, String description, int amount) {
-    }
-
-    public record TransferOwnerBody(long ownerId) {
+    @PostMapping("/{carId}/policies")
+    public ResponseEntity<?> addPolicy(@NotNull @PathVariable Long carId,
+                                       @Valid @RequestBody AddPolicyRequestDTO body) {
+        try {
+            var policyId = policyService.addPolicy(carId, body);
+            var uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                    .replacePath("/api/policies/" + policyId)
+                    .build()
+                    .toUri();
+            return ResponseEntity.created(uri).build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 }

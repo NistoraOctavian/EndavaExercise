@@ -2,6 +2,7 @@ package com.example.carins.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
 
@@ -17,6 +18,8 @@ public class InsurancePolicy {
     private LocalDate startDate;
     @NotNull
     private LocalDate endDate;
+    @ColumnDefault("false")
+    private boolean deleted = false;
 
     public InsurancePolicy() {
     }
@@ -62,5 +65,13 @@ public class InsurancePolicy {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
