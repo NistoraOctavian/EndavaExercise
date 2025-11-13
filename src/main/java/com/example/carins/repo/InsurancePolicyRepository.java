@@ -36,4 +36,13 @@ public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy
     List<InsurancePolicy> findByEndDateAndDeletedFalse(LocalDate endDate);
 
     Optional<InsurancePolicy> findByIdAndDeletedFalse(Long aLong);
+
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+            "FROM InsurancePolicy p " +
+            "WHERE p.car.id = :carId " +
+            "AND NOT (p.endDate <= :startDate " +
+            "OR p.startDate >= :endDate)")
+    boolean existsOverlapping(@Param("carId") Long carId,
+                              @Param("startDate") LocalDate startDate,
+                              @Param("endDate") LocalDate endDate);
 }

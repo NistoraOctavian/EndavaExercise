@@ -2,6 +2,7 @@ package com.example.carins.web;
 
 import com.example.carins.service.CarService;
 import com.example.carins.service.PolicyService;
+import com.example.carins.shared.exceptions.OverlapException;
 import com.example.carins.web.dto.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -103,6 +104,8 @@ public class CarController {
             return ResponseEntity.created(uri).build();
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
+        } catch (OverlapException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }

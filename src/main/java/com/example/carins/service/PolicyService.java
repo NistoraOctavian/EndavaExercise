@@ -26,6 +26,10 @@ public class PolicyService {
         }
 
         var car = carRepository.findById(carId).orElseThrow();
+        if (insurancePolicyRepository.existsOverlapping(car.getId(), dto.startDate(), dto.endDate())) {
+            throw new RuntimeException("Overlapping exists");
+        }
+
 
         var newPolicy = new InsurancePolicy();
         newPolicy.setCar(car);
@@ -48,11 +52,15 @@ public class PolicyService {
             throw new RuntimeException("Start date is after end date");
         }
 
+        var car = carRepository.findById(dto.carId()).orElseThrow();
+        if (insurancePolicyRepository.existsOverlapping(car.getId(), dto.startDate(), dto.endDate())) {
+            throw new RuntimeException("Overlapping exists");
+        }
+
         var policy = insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow();
         if (policy.isDeleted()) {
             throw new NoSuchElementException();
         }
-        var car = carRepository.findById(dto.carId()).orElseThrow();
 
         policy.setCar(car);
         policy.setProvider(dto.provider());
