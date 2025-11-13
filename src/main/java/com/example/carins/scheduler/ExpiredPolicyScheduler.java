@@ -12,19 +12,17 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Component
-public class ExpiredPolicyScheduler
-{
+public class ExpiredPolicyScheduler {
     @Autowired
     InsurancePolicyRepository insurancePolicyRepository;
 
     Logger logger = LoggerFactory.getLogger(ExpiredPolicyScheduler.class);
 
     @Scheduled(cron = "0 0 0 * * ?")
-    public void scheduleTask()
-    {
-        List<InsurancePolicy> expiredPolicies = insurancePolicyRepository.findByEndDate(LocalDate.now());
-        for (InsurancePolicy policy : expiredPolicies)
-        {
+    public void scheduleTask() {
+        List<InsurancePolicy> expiredPolicies =
+                insurancePolicyRepository.findByEndDateAndDeletedFalse(LocalDate.now());
+        for (InsurancePolicy policy : expiredPolicies) {
             logger.info("Policy {} for car {} expired on {}", policy.getId(), policy.getCar().getId(),
                     policy.getEndDate());
         }
