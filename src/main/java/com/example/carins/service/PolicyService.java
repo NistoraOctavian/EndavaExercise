@@ -20,7 +20,11 @@ public class PolicyService {
         this.carRepository = carRepository;
     }
 
-    public long addPolicy(Long carId, AddPolicyRequestDTO dto) throws NoSuchElementException {
+    public long addPolicy(Long carId, AddPolicyRequestDTO dto) throws RuntimeException {
+        if (dto.startDate().isAfter(dto.endDate())) {
+            throw new RuntimeException("Start date is after end date");
+        }
+
         var car = carRepository.findById(carId).orElseThrow();
 
         var newPolicy = new InsurancePolicy();
@@ -40,6 +44,10 @@ public class PolicyService {
     }
 
     public void updatePolicy(Long policyId, PolicyDTO dto) throws NoSuchElementException {
+        if (dto.startDate().isAfter(dto.endDate())) {
+            throw new RuntimeException("Start date is after end date");
+        }
+
         var policy = insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow();
         if (policy.isDeleted()) {
             throw new NoSuchElementException();
