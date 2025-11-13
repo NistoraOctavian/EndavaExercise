@@ -6,6 +6,6 @@ import java.time.LocalDate;
 
 public record PolicyDTO(long carId,
                         String provider,
-                        LocalDate startDate,
+                        @NotNull LocalDate startDate,
                         @NotNull LocalDate endDate) {
 }

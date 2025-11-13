@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record AddPolicyRequestDTO(String provider,
-                                  LocalDate startDate,
+                                  @NotNull LocalDate startDate,
                                   @NotNull LocalDate endDate) {
 }
