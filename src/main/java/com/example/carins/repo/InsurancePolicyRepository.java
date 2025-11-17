@@ -19,7 +19,8 @@ public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy
             "and p.deleted is false " +
             "and p.startDate <= :date " +
             "and (p.endDate is null or p.endDate >= :date)")
-    boolean existsActiveOnDate(@Param("carId") Long carId, @Param("date") LocalDate date);
+    boolean existsActiveOnDate(@Param("carId") Long carId,
+                               @Param("date") LocalDate date);
 
     List<InsurancePolicy> findByCarIdAndDeletedFalse(Long carId);
 
@@ -29,8 +30,7 @@ public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy
             "and p.deleted is false " +
             "and (p.startDate < current_date " +
             "or p.endDate < current_date)" +
-            "order by p.startDate"
-    )
+            "order by p.startDate")
     List<InsurancePolicy> carPolicyHistory(Long carId);
 
     List<InsurancePolicy> findByEndDateAndDeletedFalse(LocalDate endDate);
@@ -45,4 +45,13 @@ public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy
     boolean existsOverlapping(@Param("carId") Long carId,
                               @Param("startDate") LocalDate startDate,
                               @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT p " +
+            "FROM InsurancePolicy p " +
+            "WHERE p.car.id = :carId " +
+            "AND (coalesce(:from, NULL) IS NULL OR p.endDate >= :from) " +
+            "AND (coalesce(:to, NULL) IS NULL OR p.startDate <= :to)")
+    List<InsurancePolicy> findCarCoverageWindows(@Param("carId") long carId,
+                                                 @Param("from") LocalDate from,
+                                                 @Param("to") LocalDate to);
 }
