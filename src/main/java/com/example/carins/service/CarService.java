@@ -5,6 +5,7 @@ import com.example.carins.model.CarOwnerHistory;
 import com.example.carins.model.InsuranceClaim;
 import com.example.carins.model.InsurancePolicy;
 import com.example.carins.repo.*;
+import com.example.carins.web.dto.CarDto;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
@@ -121,6 +122,15 @@ public class CarService {
         return newRecord.getId();
     }
 
+    public List<CarDto> getCars(Long ownerId, String vin, String policyStatus) {
+        return (switch (policyStatus) {
+            case null -> carRepository.basicSearch(ownerId, vin);
+            case "active" -> carRepository.basicSearchActivePolicy(ownerId, vin);
+            case "expired" -> carRepository.basicSearchExpiredPolicy(ownerId, vin);
+            case "none" -> carRepository.basicSearchNoPolicy(ownerId, vin);
+            default -> new ArrayList<Car>();
+        }).stream().map(CarDto::new).toList();
+    }
 
     private int addClaimsToHistory(List<String> result, List<InsuranceClaim> claimList, int claimIndex,
                                    LocalDate beforeDate) {
