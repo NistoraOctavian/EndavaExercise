@@ -110,4 +110,16 @@ public class CarController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("/{carId}/coverage")
+    public ResponseEntity<?> getCoverage(@PathVariable long carId,
+                                         @RequestParam(required = false) LocalDate from,
+                                         @RequestParam(required = false) LocalDate to) {
+        try {
+            var coverage = policyService.getCoverage(carId, from, to);
+            return ResponseEntity.ok(coverage);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
