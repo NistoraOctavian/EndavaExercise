@@ -31,8 +31,10 @@ public class CarController {
     }
 
     @GetMapping("")
-    public List<CarDto> getCars() {
-        return carService.listCars().stream().map(CarDto::new).toList();
+    public List<CarDto> getCars(@RequestParam(required = false) Long ownerId,
+                                @RequestParam(required = false) String vin,
+                                @RequestParam(required = false) String policyStatus) {
+        return carService.getCars(ownerId, vin, policyStatus);
     }
 
     @GetMapping("/{carId}/insurance-valid")
