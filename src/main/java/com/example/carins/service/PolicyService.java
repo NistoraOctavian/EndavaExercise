@@ -3,16 +3,18 @@ package com.example.carins.service;
 import com.example.carins.model.InsurancePolicy;
 import com.example.carins.repo.CarRepository;
 import com.example.carins.repo.InsurancePolicyRepository;
+import com.example.carins.shared.exceptions.InvalidRangeException;
+import com.example.carins.shared.exceptions.OverlapException;
 import com.example.carins.web.dto.AddPolicyRequestDTO;
 import com.example.carins.web.dto.DateRangeDTO;
 import com.example.carins.web.dto.PolicyCoverageDTO;
 import com.example.carins.web.dto.PolicyDTO;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.NoSuchElementException;
 
 @Service
 public class PolicyService {
@@ -25,14 +27,14 @@ public class PolicyService {
         this.carRepository = carRepository;
     }
 
-    public long addPolicy(Long carId, AddPolicyRequestDTO dto) throws RuntimeException {
+    public long addPolicy(Long carId, AddPolicyRequestDTO dto) {
         if (dto.startDate().isAfter(dto.endDate())) {
-            throw new RuntimeException("Start date is after end date");
+            throw new InvalidRangeException("Start date is after end date");
         }
 
         var car = carRepository.findById(carId).orElseThrow();
         if (insurancePolicyRepository.existsOverlapping(car.getId(), dto.startDate(), dto.endDate())) {
-            throw new RuntimeException("Overlapping exists");
+            throw new OverlapException("Overlapping exists");
         }
 
 
@@ -46,26 +48,25 @@ public class PolicyService {
         return newPolicy.getId();
     }
 
-    public PolicyDTO getPolicy(Long policyId) throws NoSuchElementException {
-        var policy = insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow();
+    public PolicyDTO getPolicy(Long policyId) {
+        var policy =
+                insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow(() -> new EntityNotFoundException("Policy not found"));
 
         return new PolicyDTO(policy.getCar().getId(), policy.getProvider(), policy.getStartDate(), policy.getEndDate());
     }
 
-    public void updatePolicy(Long policyId, PolicyDTO dto) throws NoSuchElementException {
+    public void updatePolicy(Long policyId, PolicyDTO dto) {
         if (dto.startDate().isAfter(dto.endDate())) {
-            throw new RuntimeException("Start date is after end date");
+            throw new InvalidRangeException("Start date is after end date");
         }
 
         var car = carRepository.findById(dto.carId()).orElseThrow();
         if (insurancePolicyRepository.existsOverlapping(car.getId(), dto.startDate(), dto.endDate())) {
-            throw new RuntimeException("Overlapping exists");
+            throw new OverlapException("Overlapping exists");
         }
 
-        var policy = insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow();
-        if (policy.isDeleted()) {
-            throw new NoSuchElementException();
-        }
+        var policy =
+                insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow(() -> new EntityNotFoundException("Policy not found"));
 
         policy.setCar(car);
         policy.setProvider(dto.provider());
@@ -74,18 +75,16 @@ public class PolicyService {
         insurancePolicyRepository.save(policy);
     }
 
-    public void deletePolicy(Long policyId) throws NoSuchElementException {
-        var policy = insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow();
-        if (policy.isDeleted()) {
-            throw new NoSuchElementException();
-        }
+    public void deletePolicy(Long policyId) {
+        var policy =
+                insurancePolicyRepository.findByIdAndDeletedFalse(policyId).orElseThrow(() -> new EntityNotFoundException("Policy not found"));
 
         policy.setDeleted(true);
         insurancePolicyRepository.save(policy);
     }
 
-    public PolicyCoverageDTO getCoverage(Long carId, LocalDate from, LocalDate to) throws NoSuchElementException {
-        carRepository.findById(carId).orElseThrow();
+    public PolicyCoverageDTO getCoverage(Long carId, LocalDate from, LocalDate to) {
+        carRepository.findById(carId).orElseThrow(() -> new EntityNotFoundException("Car not found"));
 
         var carCoverageWindows = insurancePolicyRepository.findCarCoverageWindows(carId, from, to);
         carCoverageWindows.sort(Comparator.comparing(InsurancePolicy::getStartDate));

@@ -2,11 +2,13 @@ package com.example.carins.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.Check;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "car_owner_history")
+@Check(constraints = "coalesce(end_date, NULL) IS NULL OR start_date <= end_date")
 public class CarOwnerHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
