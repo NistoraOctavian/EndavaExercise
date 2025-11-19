@@ -2,12 +2,14 @@ package com.example.carins.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "insurance_policy")
+@Check(constraints = "start_date <= end_date")
 public class InsurancePolicy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
